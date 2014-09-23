@@ -32,7 +32,7 @@ int main()
                     UG = G - 1,
                     g = 2_mpz;
 
-    const vector<mpz_class>::size_type n = 50, t = 25;
+    const vector<mpz_class>::size_type n = 10, t = 5;
 
     auto fcs = vector<vector<mpz_class>>(n),
          xs = vector<vector<mpz_class>>(n),
@@ -56,7 +56,7 @@ int main()
         for(vector<mpz_class>::size_type j = 0; j < n; ++j) {
             xs[i][j] = 0_mpz;
             for(vector<mpz_class>::size_type k = 0; k < t; ++k) {
-                xs[i][j] += fcs[i][k] * pow(j, k);
+                xs[i][j] = (xs[i][j] + fcs[i][k] * pow(j, k)) % UG;
             }
             cout << xs[i][j] << " ";
         }
