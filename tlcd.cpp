@@ -20,7 +20,7 @@ int main()
 
     auto parties = vector<party>{};
 
-    mpz_class public_key = 1_mpz;
+    mpz_class public_key = 1;
 
     for(party_id_t i = 0; i < n; ++i) {
         party p{i, n, t};
@@ -31,7 +31,7 @@ int main()
     cout << "Shares check out?" << endl;
     for(party_id_t i = 0; i < n; ++i) {
         for(party_id_t j = 0; j < n; ++j) {
-            mpz_class gxij, prodc = 1_mpz;
+            mpz_class gxij, prodc = 1;
             mpz_powm(gxij.get_mpz_t(), field_units_group_generator.get_mpz_t(), parties[i].secret_shares[j].get_mpz_t(), finite_field_order.get_mpz_t());
             for(vector<mpz_class>::size_type k = 0; k < t; ++k) {
                 mpz_class cjk, jk = pow(j, k);

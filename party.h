@@ -20,8 +20,6 @@ public:
                       verification_commitments;
 
     party(party_id_t id, vector<party>::size_type num_parties, vector<mpz_class>::size_type secret_share_threshold);
-
-    void init();
 };
 
 }
