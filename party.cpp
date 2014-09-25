@@ -12,12 +12,13 @@ using namespace std;
 
 namespace tlc {
 
-party::party(party_id_t id, set<party_id_t> party_ids, vector<mpz_class>::size_type secret_sharing_threshold) :
+party::party(party_id_t id, const set<party_id_t>& party_ids, const size_t secret_sharing_threshold,
+             map<party_id_t, vector<mpz_class>>& verification_commitments) :
     id(id),
     party_ids(party_ids),
     polynomial(secret_sharing_threshold),
     secret_shares(),
-    verification_commitments(secret_sharing_threshold)
+    verification_commitments(verification_commitments)
 {
     if(id == 0) throw invalid_argument("party id can't be 0");
 
@@ -41,12 +42,15 @@ party::party(party_id_t id, set<party_id_t> party_ids, vector<mpz_class>::size_t
     }
     cout << "]" << endl;
 
+    vector<mpz_class> vcs(secret_sharing_threshold);
     cout << "  verification commitments: [ ";
     for(vector<mpz_class>::size_type j = 0; j < secret_sharing_threshold; ++j) {
-        mpz_powm(verification_commitments[j].get_mpz_t(), field_units_group_generator.get_mpz_t(), polynomial[j].get_mpz_t(), finite_field_order.get_mpz_t());
-        cout << verification_commitments[j] << " ";
+        mpz_powm(vcs[j].get_mpz_t(), field_units_group_generator.get_mpz_t(), polynomial[j].get_mpz_t(), finite_field_order.get_mpz_t());
+        cout << vcs[j] << " ";
     }
     cout << "]"  << endl;
+
+    verification_commitments[id] = vcs;
 }
 
 }

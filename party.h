@@ -15,12 +15,16 @@ class party
 {
 public:
     party_id_t id;
-    set<party_id_t> party_ids;
+    const set<party_id_t>& party_ids;
     vector<mpz_class> polynomial;
     map<party_id_t, mpz_class> secret_shares;
-    vector<mpz_class> verification_commitments;
 
-    party(party_id_t id, set<party_id_t> party_ids, vector<mpz_class>::size_type secret_sharing_threshold);
+    const map<party_id_t, vector<mpz_class>>& verification_commitments;
+
+    party(party_id_t id, const set<party_id_t>& party_ids, const size_t secret_sharing_threshold,
+          map<party_id_t, vector<mpz_class>>& verification_commitments);
+
+
 };
 
 }

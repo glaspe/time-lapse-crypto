@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <gmpxx.h>
+#include <map>
 
 #include "tlc.h"
 #include "party.h"
@@ -23,24 +24,26 @@ int main()
     for (party_id_t i = 1; i <= n; ++i)
         party_ids.insert(i);
 
+    auto verification_commitments = map<party_id_t, vector<mpz_class>>();
+
     auto parties = vector<party>();
 
     mpz_class public_key = 1;
 
     for(auto party_id : party_ids) {
-        party p(party_id, party_ids, t);
-        public_key = public_key * p.verification_commitments[0] % finite_field_order;
+        party p(party_id, party_ids, t, verification_commitments);
+        public_key = public_key * verification_commitments[party_id][0] % finite_field_order;
         parties.push_back(p);
     }
 
     cout << "Shares check out?" << endl;
-    for(auto party : parties) {
-        for(auto party_id : party_ids) {
+    for(auto party1 : parties) {
+        for(auto party2_id : party_ids) {
             mpz_class gxij, prodc = 1;
-            mpz_powm(gxij.get_mpz_t(), field_units_group_generator.get_mpz_t(), party.secret_shares[party_id].get_mpz_t(), finite_field_order.get_mpz_t());
+            mpz_powm(gxij.get_mpz_t(), field_units_group_generator.get_mpz_t(), party1.secret_shares[party2_id].get_mpz_t(), finite_field_order.get_mpz_t());
             for(vector<mpz_class>::size_type k = 0; k < t; ++k) {
-                mpz_class cjk, party_id_k = pow(party_id, k);
-                mpz_powm(cjk.get_mpz_t(), party.verification_commitments[k].get_mpz_t(), party_id_k.get_mpz_t(), finite_field_order.get_mpz_t());
+                mpz_class cjk, party_id_k = pow(party2_id, k);
+                mpz_powm(cjk.get_mpz_t(), verification_commitments[party1.id][k].get_mpz_t(), party_id_k.get_mpz_t(), finite_field_order.get_mpz_t());
 
                 prodc = prodc * cjk % finite_field_order;
             }
