@@ -17,6 +17,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 find_package(GMP REQUIRED)
 include_directories(${GMP_INCLUDE_DIRS})
 
-add_executable(tlcd tlcd.cpp)
+add_executable(tlcd party.cpp rand_range.cpp tlcd.cpp)
 
 target_link_libraries(tlcd ${GMP_LIBRARIES} ${GMPXX_LIBRARIES})
