@@ -3,7 +3,7 @@ compiler: gcc
 notifications:
   email: false
 before_install:
-  - sudo apt-get install build-essential git autoconf cmake -y
+  - sudo apt-get install build-essential git autoconf libgmp3-dev cmake -y
 script: ./mkbuild.sh
 after_success:
   - build/tlcd
