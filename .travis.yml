@@ -1,0 +1,9 @@
+language: cpp
+compiler: gcc
+notifications:
+  email: false
+before_install:
+  - sudo apt-get install build-essential git autoconf cmake -y
+script: ./mkbuild.sh
+after_success:
+  - build/tlcd
