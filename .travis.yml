@@ -6,6 +6,7 @@ before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update -qq
   - sudo apt-get install build-essential m4 git autoconf cmake-data emacsen-common libarchive12 libgmp-dev libgmp3-dev libgmpxx4ldbl libxmlrpc-core-c3 gcc-4.8 g++-4.8 libgmp10-doc libmpfr-dev -y
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 script: ./mkbuild.sh
 after_success:
   - build/tlcd
