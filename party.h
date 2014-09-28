@@ -3,6 +3,7 @@
 
 #include <map>
 #include <tuple>
+#include <vector>
 #include <gmpxx.h>
 
 using namespace std;
