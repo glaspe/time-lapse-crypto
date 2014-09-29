@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <stdexcept>
 #include <map>
 #include <tuple>
@@ -36,7 +38,9 @@ party::party(const party_id_t id, const vector<party_id_t>& party_ids, const siz
 
         mpz_class secret_share = 0;
         for(vector<mpz_class>::size_type k = 0; k < secret_sharing_threshold; ++k) {
-            secret_share = (secret_share + polynomial[k] * pow(party_id, k)) % field_units_group_order;
+            mpz_class party_id_k, party_id_z = party_id, k_z = k;
+            mpz_powm(party_id_k.get_mpz_t(), party_id_z.get_mpz_t(), k_z.get_mpz_t(), field_units_group_order.get_mpz_t());
+            secret_share = (secret_share + polynomial[k] * party_id_k) % field_units_group_order;
         }
         computed_secret_shares[party_id] = secret_share;
         LOG(secret_share << " ");
@@ -68,7 +72,8 @@ void party::check_recieved_secret_shares()
         mpz_class gxij, prodc = 1;
         mpz_powm(gxij.get_mpz_t(), field_units_group_generator.get_mpz_t(), recieved_secret_shares[party_id].get_mpz_t(), finite_field_order.get_mpz_t());
         for(vector<mpz_class>::size_type k = 0; k < polynomial.size(); ++k) {
-            mpz_class cjk, id_k = pow(id, k);
+            mpz_class cjk, id_k, id_z = id, k_z = k;
+            mpz_powm(id_k.get_mpz_t(), id_z.get_mpz_t(), k_z.get_mpz_t(), field_units_group_order.get_mpz_t());
             mpz_powm(cjk.get_mpz_t(), verification_commitments[party_id][k].get_mpz_t(), id_k.get_mpz_t(), finite_field_order.get_mpz_t());
 
             prodc = prodc * cjk % finite_field_order;

@@ -18,8 +18,8 @@ int main()
 {
     auto start = high_resolution_clock::now();
 
-    const vector<party>::size_type n = 10;
-    const vector<mpz_class>::size_type t = 5;
+    const vector<party>::size_type n = 1;
+    const vector<mpz_class>::size_type t = 5000;
 
     auto party_ids = vector<party_id_t>();
 
@@ -31,19 +31,25 @@ int main()
 
     auto parties = vector<party>();
 
+    auto start_construction = high_resolution_clock::now();
     for(auto& party_id : party_ids) {
         party p(party_id, party_ids, t, verification_commitments, secret_share_disputes);
         parties.push_back(p);
     }
+    cout << "Average construction time: " <<
+        duration_cast<duration<double>>(high_resolution_clock::now() - start_construction).count() / n << endl;
 
     LOG("Sending secret shares appropriately:" << endl);
     for(auto& party1 : parties)
         for(auto& party2 : parties)
             party1.send_secret_share(party2);
 
+    auto start_share_checking = high_resolution_clock::now();
     LOG("Checking shares" << endl);
     for(auto& party : parties)
         party.check_recieved_secret_shares();
+    cout << "Average share checking time: " <<
+        duration_cast<duration<double>>(high_resolution_clock::now() - start_share_checking).count() / n << endl;
 
     mpz_class public_key = 1;
 
@@ -84,9 +90,10 @@ int main()
 
     LOG(
         "Shared secrets match:  " << (shared_secret == s2 ? "yes" : "no") << endl <<
-        "Messages match:        " << (message == m2 ? "yes" : "no") << endl <<
-        "Run time:              " << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << endl
+        "Messages match:        " << (message == m2 ? "yes" : "no") << endl
     );
+
+    cout << "Total run time: " << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << endl;
 
     return 0;
 }
