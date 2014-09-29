@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <map>
 #include <tuple>
+#include <vector>
+#include <cmath>
 #include <gmpxx.h>
 #include "tlc.h"
 #include "party.h"
