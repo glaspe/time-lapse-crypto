@@ -35,11 +35,13 @@ bool secret_share_matches_verification_commitment_vector(const party_id_t reciev
 party::party(const party_id_t id, const vector<party_id_t>& party_ids, const size_t secret_sharing_threshold,
              map<party_id_t, vector<mpz_class>>& verification_commitments,
              vector<tuple<party_id_t, party_id_t, mpz_class>>& secret_share_disputes,
-             map<party_id_t, set<party_id_t>>& disqualification_votes) :
+             map<party_id_t, set<party_id_t>>& disqualification_votes,
+             map<party_id_t, mpz_class>& private_key_parts) :
     party_ids(party_ids),
     verification_commitments(verification_commitments),
     secret_share_disputes(secret_share_disputes),
     disqualification_votes(disqualification_votes),
+    private_key_parts(private_key_parts),
     polynomial(secret_sharing_threshold),
     computed_secret_shares(),
     recieved_secret_shares(),
@@ -115,6 +117,11 @@ void party::submit_disqualification_votes()
         if(!share_correct)
             disqualification_votes[id].insert(sender_id);
     }
+}
+
+void party::post_private_key_part()
+{
+    private_key_parts[id] = polynomial[0];
 }
 
 }

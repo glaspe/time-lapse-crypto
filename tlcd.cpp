@@ -30,13 +30,14 @@ int main()
     auto verification_commitments = map<party_id_t, vector<mpz_class>>();
     auto secret_share_disputes = vector<tuple<party_id_t, party_id_t, mpz_class>>();
     auto disqualification_votes = map<party_id_t, set<party_id_t>>();
+    auto private_key_parts = map<party_id_t, mpz_class>();
 
     //auto parties = map<party_id_t, party>();
     auto parties = vector<party>();
 
     auto start_construction = high_resolution_clock::now();
     for(auto& party_id : party_ids) {
-        parties.push_back(party(party_id, party_ids, t, verification_commitments, secret_share_disputes, disqualification_votes));
+        parties.push_back(party(party_id, party_ids, t, verification_commitments, secret_share_disputes, disqualification_votes, private_key_parts));
     }
     cout << "Average construction time: " <<
         duration_cast<duration<double>>(high_resolution_clock::now() - start_construction).count() / n << endl;
@@ -105,15 +106,19 @@ int main()
         "Client ciphertext 2:   " << ciphertext_2 << endl
     );
 
-    // Decryption
+    // Private key reconstruction
+    for(auto& party : parties) {
+        party.post_private_key_part();
+    }
+
     mpz_class private_key = 0, s2, s_inv, m2;
 
-    for(auto& party : parties)
-        if(qualified_party_ids.count(party.id))
-            private_key = (private_key + party.polynomial[0]) % field_units_group_order;
+    for(auto& party_id : qualified_party_ids)
+        private_key = (private_key + private_key_parts[party_id]) % field_units_group_order;
 
     LOG("Private key:           " << private_key << endl);
 
+    // Decryption
     mpz_powm(s2.get_mpz_t(), ciphertext_1.get_mpz_t(), private_key.get_mpz_t(), finite_field_order.get_mpz_t());
     mpz_invert(s_inv.get_mpz_t(), s2.get_mpz_t(), finite_field_order.get_mpz_t());
     m2 = ciphertext_2 * s_inv % finite_field_order;
