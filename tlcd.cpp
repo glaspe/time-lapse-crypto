@@ -3,6 +3,7 @@
 #include <chrono>
 #include <gmpxx.h>
 #include <map>
+#include <set>
 #include <tuple>
 
 #include "tlc.h"
@@ -18,8 +19,8 @@ int main()
 {
     auto start = high_resolution_clock::now();
 
-    const vector<party>::size_type n = 1;
-    const vector<mpz_class>::size_type t = 5000;
+    const vector<party>::size_type n = 9;
+    const vector<mpz_class>::size_type t = 5;
 
     auto party_ids = vector<party_id_t>();
 
@@ -28,13 +29,14 @@ int main()
 
     auto verification_commitments = map<party_id_t, vector<mpz_class>>();
     auto secret_share_disputes = vector<tuple<party_id_t, party_id_t, mpz_class>>();
+    auto disqualification_votes = map<party_id_t, set<party_id_t>>();
 
+    //auto parties = map<party_id_t, party>();
     auto parties = vector<party>();
 
     auto start_construction = high_resolution_clock::now();
     for(auto& party_id : party_ids) {
-        party p(party_id, party_ids, t, verification_commitments, secret_share_disputes);
-        parties.push_back(p);
+        parties.push_back(party(party_id, party_ids, t, verification_commitments, secret_share_disputes, disqualification_votes));
     }
     cout << "Average construction time: " <<
         duration_cast<duration<double>>(high_resolution_clock::now() - start_construction).count() / n << endl;
@@ -51,9 +53,36 @@ int main()
     cout << "Average share checking time: " <<
         duration_cast<duration<double>>(high_resolution_clock::now() - start_share_checking).count() / n << endl;
 
+    LOG("Share disputes:" << endl);
+    for(auto& dispute : secret_share_disputes)
+        LOG(get<0>(dispute) << " < " << get<1>(dispute) << ": " << get<2>(dispute) << endl);
+
+    for(auto& party : parties)
+        party.submit_disqualification_votes();
+
+    LOG("Disqualification votes:" << endl);
+
+    auto disqualification_tally = map<party_id_t, size_t>();
+    for(auto& party_id : party_ids) {
+        LOG(party_id << ": [ ");
+        for(auto& dq_vote : disqualification_votes[party_id]) {
+            ++disqualification_tally[dq_vote];
+            LOG(dq_vote << " ");
+        }
+        LOG("]" << endl);
+    }
+
+    auto qualified_party_ids = set<party_id_t>();
+    for(auto& party_id : party_ids) {
+        LOG(party_id << " has " << disqualification_tally[party_id] << " votes for disqualification." << endl);
+        if(disqualification_tally[party_id] <= n / 2) {
+            qualified_party_ids.insert(party_id);
+        } else LOG(party_id << " has been disqualified." << endl);
+    }
+
     mpz_class public_key = 1;
 
-    for(auto& party_id : party_ids) {
+    for(auto& party_id : qualified_party_ids) {
         public_key = public_key * verification_commitments[party_id][0] % finite_field_order;
     }
 
@@ -80,7 +109,8 @@ int main()
     mpz_class private_key = 0, s2, s_inv, m2;
 
     for(auto& party : parties)
-        private_key = (private_key + party.polynomial[0]) % field_units_group_order;
+        if(qualified_party_ids.count(party.id))
+            private_key = (private_key + party.polynomial[0]) % field_units_group_order;
 
     LOG("Private key:           " << private_key << endl);
 

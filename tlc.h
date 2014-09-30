@@ -1,7 +1,7 @@
 #ifndef TLC_H
 #define TLC_H
 
-//#define DEBUGGING
+#define DEBUGGING
 
 #ifdef DEBUGGING
 #include <iostream>
@@ -20,7 +20,7 @@ using namespace std;
 namespace tlc {
 
 const mpz_class
-    finite_field_order = modp_3072,
+    finite_field_order = 23,
     field_units_group_order = finite_field_order - 1,
     field_units_group_generator = 2;
 
