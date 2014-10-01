@@ -127,10 +127,9 @@ int main()
 
     auto private_key_count = map<mpz_class, size_t>();
 
-    for(const auto& party_id : qualified_party_ids) {
+    for(const auto& party_id : qualified_party_ids)
         if(computed_private_keys.count(party_id))
             ++private_key_count[computed_private_keys[party_id]];
-    }
 
     mpz_class private_key;
     size_t most_votes = 0;
@@ -142,7 +141,6 @@ int main()
             most_votes = key_count_pair.second;
         }
     }
-
 
     // Decryption
     mpz_class s2, s_inv, m2;
