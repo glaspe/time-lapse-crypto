@@ -30,14 +30,27 @@ int main()
     auto verification_commitments = map<party_id_t, vector<mpz_class>>();
     auto secret_share_disputes = vector<tuple<party_id_t, party_id_t, mpz_class>>();
     auto disqualification_votes = map<party_id_t, set<party_id_t>>();
+    auto qualified_party_ids = vector<party_id_t>();
     auto private_key_parts = map<party_id_t, mpz_class>();
+    auto secret_shares = map<party_id_t, map<party_id_t, mpz_class>>();
+    auto computed_private_keys = map<party_id_t, mpz_class>();
 
-    //auto parties = map<party_id_t, party>();
     auto parties = vector<party>();
 
     auto start_construction = high_resolution_clock::now();
-    for(auto& party_id : party_ids) {
-        parties.push_back(party(party_id, party_ids, t, verification_commitments, secret_share_disputes, disqualification_votes, private_key_parts));
+    for(const auto& party_id : party_ids) {
+        parties.push_back(
+            party(
+                party_id,
+                party_ids,
+                t,
+                verification_commitments,
+                secret_share_disputes,
+                disqualification_votes,
+                qualified_party_ids,
+                private_key_parts,
+                secret_shares,
+                computed_private_keys));
     }
     cout << "Average construction time: " <<
         duration_cast<duration<double>>(high_resolution_clock::now() - start_construction).count() / n << endl;
@@ -64,7 +77,7 @@ int main()
     LOG("Disqualification votes:" << endl);
 
     auto disqualification_tally = map<party_id_t, size_t>();
-    for(auto& party_id : party_ids) {
+    for(const auto& party_id : party_ids) {
         LOG(party_id << ": [ ");
         for(auto& dq_vote : disqualification_votes[party_id]) {
             ++disqualification_tally[dq_vote];
@@ -73,17 +86,16 @@ int main()
         LOG("]" << endl);
     }
 
-    auto qualified_party_ids = set<party_id_t>();
-    for(auto& party_id : party_ids) {
+    for(const auto& party_id : party_ids) {
         LOG(party_id << " has " << disqualification_tally[party_id] << " votes for disqualification." << endl);
         if(disqualification_tally[party_id] <= n / 2) {
-            qualified_party_ids.insert(party_id);
+            qualified_party_ids.push_back(party_id);
         } else LOG(party_id << " has been disqualified." << endl);
     }
 
     mpz_class public_key = 1;
 
-    for(auto& party_id : qualified_party_ids) {
+    for(const auto& party_id : qualified_party_ids) {
         public_key = public_key * verification_commitments[party_id][0] % finite_field_order;
     }
 
@@ -107,18 +119,33 @@ int main()
     );
 
     // Private key reconstruction
-    for(auto& party : parties) {
-        party.post_private_key_part();
+    for(auto& party : parties)
+        party.post_private_key_part_and_secret_shares();
+
+    for(auto& party : parties)
+        party.compute_private_key();
+
+    auto private_key_count = map<mpz_class, size_t>();
+
+    for(const auto& party_id : qualified_party_ids) {
+        if(computed_private_keys.count(party_id))
+            ++private_key_count[computed_private_keys[party_id]];
     }
 
-    mpz_class private_key = 0, s2, s_inv, m2;
+    mpz_class private_key;
+    size_t most_votes = 0;
+    LOG("Key candidates:" << endl);
+    for(const auto& key_count_pair : private_key_count) {
+        LOG(key_count_pair.first << " has " << key_count_pair.second << " votes." << endl);
+        if(most_votes < key_count_pair.second) {
+            private_key = key_count_pair.first;
+            most_votes = key_count_pair.second;
+        }
+    }
 
-    for(auto& party_id : qualified_party_ids)
-        private_key = (private_key + private_key_parts[party_id]) % field_units_group_order;
-
-    LOG("Private key:           " << private_key << endl);
 
     // Decryption
+    mpz_class s2, s_inv, m2;
     mpz_powm(s2.get_mpz_t(), ciphertext_1.get_mpz_t(), private_key.get_mpz_t(), finite_field_order.get_mpz_t());
     mpz_invert(s_inv.get_mpz_t(), s2.get_mpz_t(), finite_field_order.get_mpz_t());
     m2 = ciphertext_2 * s_inv % finite_field_order;

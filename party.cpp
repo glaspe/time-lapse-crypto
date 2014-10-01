@@ -36,12 +36,18 @@ party::party(const party_id_t id, const vector<party_id_t>& party_ids, const siz
              map<party_id_t, vector<mpz_class>>& verification_commitments,
              vector<tuple<party_id_t, party_id_t, mpz_class>>& secret_share_disputes,
              map<party_id_t, set<party_id_t>>& disqualification_votes,
-             map<party_id_t, mpz_class>& private_key_parts) :
+             vector<party_id_t>& qualified_party_ids,
+             map<party_id_t, mpz_class>& private_key_parts,
+             map<party_id_t, map<party_id_t, mpz_class>>& secret_shares,
+             map<party_id_t, mpz_class>& computed_private_keys) :
     party_ids(party_ids),
     verification_commitments(verification_commitments),
     secret_share_disputes(secret_share_disputes),
     disqualification_votes(disqualification_votes),
+    qualified_party_ids(qualified_party_ids),
     private_key_parts(private_key_parts),
+    secret_shares(secret_shares),
+    computed_private_keys(computed_private_keys),
     polynomial(secret_sharing_threshold),
     computed_secret_shares(),
     recieved_secret_shares(),
@@ -82,6 +88,7 @@ party::party(const party_id_t id, const vector<party_id_t>& party_ids, const siz
     verification_commitments[id] = vcs;
 
     disqualification_votes[id] = set<party_id_t>();
+    secret_shares[id] = map<party_id_t, mpz_class>();
 }
 
 void party::send_secret_share(party& reciever)
@@ -119,9 +126,24 @@ void party::submit_disqualification_votes()
     }
 }
 
-void party::post_private_key_part()
+void party::post_private_key_part_and_secret_shares()
 {
     private_key_parts[id] = polynomial[0];
+    for(const auto& party_id : qualified_party_ids)
+        secret_shares[id][party_id] = recieved_secret_shares[party_id];
+}
+
+void party::compute_private_key()
+{
+    mpz_class private_key = 0;
+
+    for(const auto& party_id : qualified_party_ids) {
+        private_key = (private_key + private_key_parts[party_id]) % field_units_group_order;
+    }
+
+    LOG(id << "'s computed private key: " << private_key << endl);
+
+    computed_private_keys[id] = private_key;
 }
 
 }
