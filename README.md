@@ -1,6 +1,6 @@
 ## Time-Lapse Cryptography
 
-[![Build Status](https://magnum.travis-ci.com/tensorjack/time-lapse-crypto.svg?token=h8bLmAx2yUKkxWUpSTT9)](https://magnum.travis-ci.com/tensorjack/time-lapse-crypto)
+[![Build Status](https://travis-ci.org/tensorjack/time-lapse-crypto.svg)](https://travis-ci.org/tensorjack/time-lapse-crypto)
 
 [Alan Lu's](https://github.com/cag) _time-lapse cryptography protocol_ (TLCP) implementation, which was originally outlined by [Rabin and Thorpe](http://www.eecs.harvard.edu/~cat/tlc.pdf).
 
